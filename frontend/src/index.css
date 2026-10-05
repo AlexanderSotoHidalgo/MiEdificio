@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
+@config "../tailwind.config.js";
+
+@layer base {
+  body { @apply m-0 min-h-screen bg-paper text-ink antialiased; }
+  button, input, select, textarea { font: inherit; }
+  :focus-visible { @apply outline-none ring-2 ring-forest ring-offset-2; }
+}
+
+@layer components {
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-ink disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold transition hover:bg-black/[0.03]; }
+  .field { @apply w-full rounded-xl border border-black/10 bg-white px-3.5 py-3 text-sm placeholder:text-black/35 focus:border-forest; }
+  .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-black/55; }
+  .card { @apply rounded-2xl border border-black/[0.07] bg-white shadow-soft; }
+}
