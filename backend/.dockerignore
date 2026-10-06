@@ -1,6 +1,11 @@
-__pycache__
-*.pyc
-.pytest_cache
+__pycache__/
+*.py[cod]
+*.sqlite3
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+htmlcov/
 .env
-tests
-
+.git/

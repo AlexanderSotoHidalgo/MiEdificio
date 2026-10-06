@@ -1,11 +1,10 @@
 import { useAuth } from './AuthContext'
-import { AdminPage } from './pages/AdminPage'
-import { LoginPage } from './pages/LoginPage'
-import { ResidentPage } from './pages/ResidentPage'
+import { AccountPage } from './features/account/AccountPage'
+import { LoginPage } from './features/auth/LoginPage'
+import { AdminPaymentsPage } from './features/reconciliation/AdminPaymentsPage'
 
 export default function App() {
   const { user } = useAuth()
   if (!user) return <LoginPage />
-  return user.role === 'administrador' ? <AdminPage /> : <ResidentPage />
+  return user.role === 'administrador' ? <AdminPaymentsPage /> : <AccountPage />
 }
-

@@ -1,31 +1,71 @@
+name: miedificio
+
+x-backend-environment: &backend-environment
+  APP_ENV: ${APP_ENV:-development}
+  DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://miedificio:miedificio_local@db:5432/miedificio}
+  JWT_SECRET: ${JWT_SECRET:-local-only-secret-change-me}
+  JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+  JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-15}
+  REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
+  STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
+  UPLOAD_DIR: ${UPLOAD_DIR:-/data/uploads}
+  MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-5}
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+  MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-}
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-}
+  MINIO_BUCKET: ${MINIO_BUCKET:-miedificio-receipts}
+  MINIO_SECURE: ${MINIO_SECURE:-false}
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_USE_TLS: ${SMTP_USE_TLS:-false}
+  EMAIL_FROM: ${EMAIL_FROM:-MiEdificio <no-reply@miedificio.local>}
+  FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+  INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@miedificio.pe}
+  INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-Admin123!}
+  INITIAL_ADMIN_NAME: ${INITIAL_ADMIN_NAME:-Administración MiEdificio}
+  INITIAL_BUILDING_NAME: ${INITIAL_BUILDING_NAME:-Condominio Los Cedros}
+  INITIAL_BUILDING_ADDRESS: ${INITIAL_BUILDING_ADDRESS:-Av. Los Cedros 245}
+  INITIAL_BUILDING_DISTRICT: ${INITIAL_BUILDING_DISTRICT:-Santiago de Surco}
+  SEED_DEMO_DATA: ${SEED_DEMO_DATA:-false}
+  RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+
 services:
   db:
     image: postgres:16-alpine
+    profiles: ["dev", "prod"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-miedificio}
       POSTGRES_USER: ${POSTGRES_USER:-miedificio}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-miedificio_local}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-miedificio} -d ${POSTGRES_DB:-miedificio}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 12
+      start_period: 5s
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks: [miedificio]
 
   backend:
-    build: ./backend
-    environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://miedificio:miedificio_local@db:5432/miedificio}
-      JWT_SECRET: ${JWT_SECRET:-local-only-secret-change-me}
-      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-480}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:8080}
-      UPLOAD_DIR: ${UPLOAD_DIR:-/data/uploads}
-      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-8}
-      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
-    ports:
-      - "8000:8000"
+    build:
+      context: ./backend
+      target: production
+    profiles: ["dev", "prod"]
+    environment: *backend-environment
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2)
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
     volumes:
       - payment_receipts:/data/uploads
     depends_on:
@@ -36,11 +76,19 @@ services:
   frontend:
     build:
       context: ./frontend
+      target: production
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
-    ports:
-      - "8080:80"
-    depends_on: [backend]
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+    profiles: ["dev", "prod"]
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 10s
+    depends_on:
+      backend:
+        condition: service_healthy
     networks: [miedificio]
 
 volumes:
@@ -50,4 +98,3 @@ volumes:
 networks:
   miedificio:
     driver: bridge
-

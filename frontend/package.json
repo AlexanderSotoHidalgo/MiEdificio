@@ -6,14 +6,21 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint src --max-warnings=0",
+    "format:check": "prettier --check src",
+    "generate:api": "orval --config orval.config.ts",
+    "generate:api:types": "openapi-typescript openapi.json -o src/api/generated/schema.d.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
     "@tanstack/react-query": "^5.62.7",
     "axios": "^1.7.9",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.89.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
@@ -21,9 +28,22 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "msw": "^2.15.0",
+    "openapi-typescript": "^7.13.0",
+    "orval": "^8.40.0",
     "postcss": "^8.4.49",
+    "prettier": "^3.9.9",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.6.3",
+    "typescript-eslint": "^8.71.1",
     "vite": "^6.0.5"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
